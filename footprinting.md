@@ -25,36 +25,78 @@
    ```
 
 3. **Setting up SQLPlus for Database Connection**
-   Create and run the following script to set up SQLPlus:
+
+   First, download the required Oracle Instant Client packages:
+   1. Visit [Oracle Instant Client Downloads](https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html)
+   2. Accept the license agreement
+   3. Download both:
+      - Basic Package (instantclient-basic-linux.x64-XX.X.0.0.0dbru.zip)
+      - SQL*Plus Package (instantclient-sqlplus-linux.x64-XX.X.0.0.0dbru.zip)
+
+   Then run the following installation script:
    ```bash
    #!/bin/bash
 
-   # Update and install unzip if not already installed
+   # Exit on any error
+   set -e
+
+   echo "[*] Updating package list and installing unzip..."
    sudo apt-get update
-   sudo apt-get install unzip -y
+   sudo apt-get install -y unzip libaio1
 
-   # Download Oracle Instant Client packages
-   wget https://download.oracle.com/otn_software/linux/instantclient/214000/instantclient-basic-linux.x64-21.4.0.0.0dbru.zip
-   wget https://download.oracle.com/otn_software/linux/instantclient/214000/instantclient-sqlplus-linux.x64-21.4.0.0.0dbru.zip
+   # Verify the downloaded files exist
+   if [ ! -f "instantclient-basic-linux.x64-*.zip" ] || [ ! -f "instantclient-sqlplus-linux.x64-*.zip" ]; then
+       echo "[-] Error: Oracle Instant Client zip files not found!"
+       echo "    Please download both Basic and SQL*Plus packages from Oracle website first."
+       exit 1
+   fi
 
-   # Create target directory and unzip packages
+   echo "[*] Creating Oracle directory..."
    sudo mkdir -p /opt/oracle
-   sudo unzip -d /opt/oracle instantclient-basic-linux.x64-21.4.0.0.0dbru.zip
-   sudo unzip -d /opt/oracle instantclient-sqlplus-linux.x64-21.4.0.0.0dbru.zip
 
-   # Set environment variables for this session
-   export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_4:$LD_LIBRARY_PATH
-   export PATH=/opt/oracle/instantclient_21_4:$PATH
+   echo "[*] Extracting packages..."
+   sudo unzip -o "instantclient-basic-linux.x64-*.zip" -d /opt/oracle/
+   sudo unzip -o "instantclient-sqlplus-linux.x64-*.zip" -d /opt/oracle/
 
-   # Optional: Persist environment variables for future sessions
-   echo 'export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_4:$LD_LIBRARY_PATH' >> ~/.bashrc
-   echo 'export PATH=/opt/oracle/instantclient_21_4:$PATH' >> ~/.bashrc
+   # Get the actual instant client directory name
+   INSTANT_CLIENT_DIR=$(ls -d /opt/oracle/instantclient_* | head -n 1)
 
-   # Print sqlplus version to verify installation
-   sqlplus -v
+   if [ -z "$INSTANT_CLIENT_DIR" ]; then
+       echo "[-] Error: Could not find instant client directory!"
+       exit 1
+   fi
+
+   echo "[*] Setting up environment variables..."
+   # Set up environment variables
+   echo "export LD_LIBRARY_PATH=${INSTANT_CLIENT_DIR}:\$LD_LIBRARY_PATH" | sudo tee /etc/profile.d/oracle-instantclient.sh
+   echo "export PATH=${INSTANT_CLIENT_DIR}:\$PATH" | sudo tee -a /etc/profile.d/oracle-instantclient.sh
+
+   # Source the new environment variables
+   source /etc/profile.d/oracle-instantclient.sh
+
+   echo "[*] Verifying installation..."
+   if command -v sqlplus >/dev/null 2>&1; then
+       echo "[+] SQLPlus installed successfully!"
+       sqlplus -v
+   else
+       echo "[-] Error: SQLPlus installation failed!"
+       exit 1
+   fi
+
+   echo "[*] Installation complete! Please log out and log back in for environment variables to take effect."
    ```
 
 ### Notes
 - After successful credential enumeration using ODAT, use SQLPlus to connect to the database
-- Make sure to save the SQLPlus setup script with executable permissions (`chmod +x script.sh`)
-- The environment variables will be persisted in `.bashrc` for future sessions 
+- Make the script executable: `chmod +x install-sqlplus.sh`
+- The script requires root privileges and will prompt for sudo password
+- Environment variables are set system-wide in `/etc/profile.d/`
+- The script includes error checking and better feedback
+- Dependencies like `libaio1` are now included
+- You may need to log out and log back in for environment variables to take effect
+
+### Connecting to Oracle Database
+After installation, connect to the database using:
+```bash
+sqlplus username/password@//hostname:1521/service_name
+``` 

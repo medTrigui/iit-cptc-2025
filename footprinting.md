@@ -33,7 +33,11 @@
 
    echo "[*] Updating package list and installing dependencies..."
    sudo apt-get update
-   sudo apt-get install -y unzip libaio1 wget
+   # Try to install libaio1 first (for Ubuntu/Debian), if it fails, try libaio (for Kali)
+   if ! sudo apt-get install -y unzip wget libaio1 2>/dev/null; then
+       echo "[*] libaio1 not found, trying libaio instead..."
+       sudo apt-get install -y unzip wget libaio
+   fi
 
    echo "[*] Downloading Oracle Instant Client packages..."
    wget https://download.oracle.com/otn_software/linux/instantclient/instantclient-basic-linuxx64.zip
@@ -88,7 +92,7 @@
 - The script requires root privileges and will prompt for sudo password
 - Environment variables are set system-wide in `/etc/profile.d/`
 - The script includes error checking and better feedback
-- Dependencies like `libaio1` are now included
+- The script automatically detects and installs the correct libaio package for your distribution
 - You may need to log out and log back in for environment variables to take effect
 
 ### Connecting to Oracle Database

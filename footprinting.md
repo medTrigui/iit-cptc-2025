@@ -65,7 +65,7 @@
     export TNS_ADMIN=${INSTANT_CLIENT_DIR}
     export LD_LIBRARY_PATH=${INSTANT_CLIENT_DIR}:\$LD_LIBRARY_PATH
     export ORACLE_HOME=${INSTANT_CLIENT_DIR}
-    EOF
+ EOF
 
    # Make the environment variables available in current session
    export PATH=$PATH:${INSTANT_CLIENT_DIR}

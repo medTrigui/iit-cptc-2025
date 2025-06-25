@@ -60,12 +60,12 @@
    echo "[*] Setting up environment variables..."
    # Set up environment variables
    cat << EOF | sudo tee /etc/profile.d/oracle-instantclient.sh
-export PATH=\$PATH:${INSTANT_CLIENT_DIR}
-export SQLPATH=${INSTANT_CLIENT_DIR}
-export TNS_ADMIN=${INSTANT_CLIENT_DIR}
-export LD_LIBRARY_PATH=${INSTANT_CLIENT_DIR}:\$LD_LIBRARY_PATH
-export ORACLE_HOME=${INSTANT_CLIENT_DIR}
-EOF
+    export PATH=\$PATH:${INSTANT_CLIENT_DIR}
+    export SQLPATH=${INSTANT_CLIENT_DIR}
+    export TNS_ADMIN=${INSTANT_CLIENT_DIR}
+    export LD_LIBRARY_PATH=${INSTANT_CLIENT_DIR}:\$LD_LIBRARY_PATH
+    export ORACLE_HOME=${INSTANT_CLIENT_DIR}
+    EOF
 
    # Make the environment variables available in current session
    export PATH=$PATH:${INSTANT_CLIENT_DIR}

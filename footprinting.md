@@ -31,13 +31,8 @@
    # Exit on any error
    set -e
 
-   echo "[*] Updating package list and installing dependencies..."
-   sudo apt-get update
-   # Try to install libaio1 first (for Ubuntu/Debian), if it fails, try libaio (for Kali)
-   if ! sudo apt-get install -y unzip wget libaio1 2>/dev/null; then
-       echo "[*] libaio1 not found, trying libaio instead..."
-       sudo apt-get install -y unzip wget libaio
-   fi
+   echo "[*] Creating Oracle directory..."
+   sudo mkdir -p /opt/oracle
 
    echo "[*] Downloading Oracle Instant Client packages..."
    wget https://download.oracle.com/otn_software/linux/instantclient/instantclient-basic-linuxx64.zip
@@ -49,9 +44,6 @@
        echo "    Please check your internet connection or download manually from Oracle website."
        exit 1
    fi
-
-   echo "[*] Creating Oracle directory..."
-   sudo mkdir -p /opt/oracle
 
    echo "[*] Extracting packages..."
    sudo unzip -o instantclient-basic-linuxx64.zip -d /opt/oracle/
@@ -67,8 +59,13 @@
 
    echo "[*] Setting up environment variables..."
    # Set up environment variables
-   echo "export LD_LIBRARY_PATH=${INSTANT_CLIENT_DIR}:\$LD_LIBRARY_PATH" | sudo tee /etc/profile.d/oracle-instantclient.sh
-   echo "export PATH=${INSTANT_CLIENT_DIR}:\$PATH" | sudo tee -a /etc/profile.d/oracle-instantclient.sh
+   cat << EOF | sudo tee /etc/profile.d/oracle-instantclient.sh
+   export PATH=\$PATH:${INSTANT_CLIENT_DIR}
+   export SQLPATH=${INSTANT_CLIENT_DIR}
+   export TNS_ADMIN=${INSTANT_CLIENT_DIR}
+   export LD_LIBRARY_PATH=${INSTANT_CLIENT_DIR}
+   export ORACLE_HOME=${INSTANT_CLIENT_DIR}
+   EOF
 
    # Source the new environment variables
    source /etc/profile.d/oracle-instantclient.sh
@@ -89,10 +86,9 @@
    ```
 
 ### Notes
-- The script requires root privileges and will prompt for sudo password
+- The script will download and install Oracle Instant Client directly
 - Environment variables are set system-wide in `/etc/profile.d/`
 - The script includes error checking and better feedback
-- The script automatically detects and installs the correct libaio package for your distribution
 - You may need to log out and log back in for environment variables to take effect
 
 ### Connecting to Oracle Database
